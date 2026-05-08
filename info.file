@@ -1,0 +1,370 @@
+Build a web app called "IE Report Maker" for TCET.
+
+---
+
+## OVERVIEW
+
+User fills in metadata on the website UI.
+User pastes their report content section by section.
+App formats everything and exports a professional multi-page PDF.
+
+NO AI generation. NO Claude API. Pure formatting + PDF export only.
+
+---
+
+## TECH STACK
+
+- React (Vite) + plain CSS
+- html2pdf.js for PDF export
+- No backend, no API calls, no auth
+
+---
+
+## PDF SPECIFICATIONS (enforce strictly)
+
+Font: Times New Roman
+Font Size: 12pt
+Alignment: Justified
+Line Spacing: 1.15
+Margin: 2.54cm all sides (Normal)
+Orientation: Portrait
+Page size: A4
+
+---
+
+## PAGE 1 — COVER PAGE
+
+### HEADER (copy exactly from reference image)
+
+Three-column layout inside the header:
+
+LEFT COLUMN:
+- Square logo block with orange/red border
+- Text inside: "tcet" (small), "ES&H" (large block letters), "ENGINEERS"
+- Use an <img> tag if logo image is provided, else replicate as styled HTML div
+
+CENTER COLUMN (centered text):
+- Line 1: "TCET" — bold, large (~16pt)
+- Line 2: "DEPARTMENT OF ENGINEERING SCIENCES AND HUMANITIES" — bold, orange/amber color (#E07B00 approx), ~11pt
+- Line 3: "Choice Based Credit Grading Scheme with Holistic and Multidisciplinary Education" — regular, ~9pt
+- Line 4: "Under Autonomy - CBCGS-HME 2023" — regular, ~9pt
+- Line 5: "University of Mumbai" — bold, ~11pt
+
+RIGHT COLUMN:
+- Circular TCET logo (use <img> or styled placeholder circle with "tcet Est.2001")
+
+Below the three-column header:
+- Full-width horizontal rule (1px solid black)
+- Another thinner rule just below it (double line effect)
+
+---
+
+### COVER PAGE BODY (all centered, Times New Roman)
+
+Gap after header (~60px)
+
+[PROJECT TITLE]
+- Font: Times New Roman, Bold, 20pt
+- Centered
+- User-editable field: "Title of Project"
+- Allow 2 lines if long
+
+Gap (~40px)
+
+[GROUP LINE]
+- "By Group No. ___ Comp ___"
+- Bold, 14pt, centered
+- Two input fields: Group Number + Division/Comp letter
+
+Gap (~30px)
+
+[STUDENTS TABLE]
+- Bordered table, 2 columns × up to 10 rows
+- Each cell: Roll No. + Student Name (bold, ~13pt)
+- Example: "23. Pranay Chavan | 28. Saquib Chougle"
+- User inputs: up to 10 students (Roll No + Name per student)
+- Render only filled rows in PDF
+
+Gap (~40px)
+
+[SUBMISSION BLOCK — centered, all bold]
+- "An Innovative Examination (IE) Report" — bold, 12pt
+- "Submitted for" — bold, 12pt
+- "The subject of" — bold, 12pt
+- Subject Name — bold, 18pt (e.g. "Engineering Mechanics (EM)")
+- "Under the guidance of" — bold, 12pt
+- Faculty Name — bold, 22pt (e.g. "Mr. Pawan Tiwari")
+
+Gap to bottom
+
+[PAGE NUMBER]
+- Centered at bottom: "1"
+
+---
+
+## PAGE 2 ONWARDS — CONTENT PAGES
+
+### HEADER (same on every page including page 1)
+
+Exact same three-column TCET header as Page 1.
+Followed by double horizontal rule.
+No cover page body — just header then content flows below.
+
+### CONTENT
+
+User pastes text for each section into labeled textareas on the website.
+Sections appear in order from page 2, one after another with page breaks handled automatically by html2pdf.
+
+Sections (in this exact order):
+1. Title of Project        ← auto-pulled from cover field, render as section heading only
+2. Theoretical Background  ← user textarea
+3. Introduction            ← user textarea
+4. Literature Survey       ← user textarea
+5. Methodology Used / Current Trends ← user textarea
+6. Future Scope            ← user textarea (optional — skip section entirely if empty)
+7. Conclusion              ← user textarea
+8. Acknowledgement         ← user textarea
+9. References              ← user textarea (split by newline → render as numbered <ol>)
+
+### SECTION FORMATTING
+
+Section heading:
+- Times New Roman, 12pt, Bold, Underlined, Left-aligned
+- Example: "2. Theoretical Background"
+
+Section body:
+- Times New Roman, 12pt, Justified, line-height 1.15
+- 14px margin below each section
+
+### FOOTER (pages 2 onwards only, not on cover page)
+
+Left: "Student's Signature: ___________"
+Right: "Teacher's Signature: ___________"
+Center: page number (starting at 2)
+Font: 10pt, Times New Roman
+
+---
+
+## WEBSITE UI LAYOUT
+
+Two-panel layout. Left panel = cover fields. Right panel = content sections.
+
+### LEFT PANEL — Cover Page Fields
+
+Label + input for each:
+- Title of Project (text input, full width)
+- Group Number (short input)
+- Division / Comp (short input, e.g. "A", "B")
+- Subject Name (text input)
+- Subject Code (short input, optional)
+- Faculty Name (text input)
+- Date of Submission (date picker or text input)
+
+Students section (up to 10 rows):
+- Repeating row: [Roll No input] [Student Name input] [+ Add Row button]
+- Minimum 1 row shown by default, max 10
+- Show "Add Student" button below rows
+
+### RIGHT PANEL — Report Content Sections
+
+Labeled textarea for each of the 9 sections:
+- Label shows section number + name
+- Placeholder: "Paste your content here..."
+- Min height: 120px, resizable vertically
+- Future Scope label includes "(optional)"
+
+### BOTTOM BAR
+
+Full-width navy button: "Download PDF"
+On click:
+- Validate: Title and at least 1 student name must be filled
+- If invalid: show inline red error message, do not generate
+- If valid: generate and download PDF
+
+Filename: Title_GroupNo_IEReport.pdf (spaces replaced with underscores)
+
+---
+
+## COLLEGE HEADER CONFIG FILE
+
+Create src/config/collegeHeader.js:
+
+export const collegeHeader = {
+  department: "Department of Engineering Sciences and Humanities",
+  departmentColor: "#E07B00",
+  line3: "Choice Based Credit Grading Scheme with Holistic and Multidisciplinary Education",
+  line4: "Under Autonomy - CBCGS-HME 2023",
+  university: "University of Mumbai",
+  logoLeftImage: null,       // path to left square logo image
+  logoRightImage: null,      // path to right circular logo image
+  logoLeftText: "ES&H",      // fallback if no image
+  logoRightText: "tcet",     // fallback if no image
+  accentColor: "#E07B00",
+}
+
+PDF header reads ONLY from this object. To switch colleges: update only this file.
+
+---
+
+## FOLDER STRUCTURE
+
+ie-report-maker/
+├── index.html
+├── public/
+│   ├── logo-left.png        ← place TCET square logo here
+│   └── logo-right.png       ← place TCET circular logo here
+├── src/
+│   ├── main.jsx
+│   ├── App.jsx
+│   ├── config/
+│   │   └── collegeHeader.js
+│   ├── components/
+│   │   ├── CoverFields.jsx        ← left panel inputs
+│   │   ├── ContentFields.jsx      ← right panel textareas
+│   │   └── PDFExporter.jsx        ← builds HTML string → html2pdf → download
+│   └── styles/
+│       └── app.css
+
+---
+
+## STEP BY STEP BUILD ORDER
+
+Step 1:
+Scaffold Vite + React project.
+Install only: html2pdf.js
+Run: npm create vite@latest ie-report-maker -- --template react
+Then: cd ie-report-maker && npm install html2pdf.js
+
+Step 2:
+Create src/config/collegeHeader.js with the object above.
+
+Step 3:
+Build CoverFields.jsx
+- Controlled state for all cover fields
+- Dynamic student rows (add/remove)
+- Expose all values via onChange prop or lift state to App.jsx
+
+Step 4:
+Build ContentFields.jsx
+- 9 labeled textareas with section names
+- Expose all values via onChange prop or lift state to App.jsx
+
+Step 5:
+Build PDFExporter.jsx
+
+Function: buildPDFHTML(coverData, contentData, headerConfig)
+Returns a full HTML string structured as:
+
+<!-- ========== PAGE 1: COVER ========== -->
+<div class="page cover-page">
+  [HEADER HTML]        ← three-column layout from collegeHeader.js
+  [DOUBLE RULE]
+  [COVER BODY]         ← title, group, students table, submission block
+  [PAGE NUMBER: 1]
+</div>
+
+<!-- ========== PAGE BREAK ========== -->
+<div style="page-break-before: always;"></div>
+
+<!-- ========== PAGES 2+: CONTENT ========== -->
+<div class="page content-page">
+  [HEADER HTML]        ← same header repeated
+  [DOUBLE RULE]
+  [SECTIONS]           ← loop through 9 sections, skip if empty
+  [FOOTER]             ← signatures + page number
+</div>
+
+html2pdf options:
+{
+  margin: [25.4, 25.4, 25.4, 25.4],
+  filename: generated_filename,
+  image: { type: 'jpeg', quality: 1 },
+  html2canvas: { scale: 2, useCORS: true },
+  jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+}
+
+Global CSS inside the HTML string (injected as <style>):
+body {
+  font-family: 'Times New Roman', Times, serif;
+  font-size: 12pt;
+  line-height: 1.15;
+  color: #000;
+}
+.section-heading {
+  font-weight: bold;
+  text-decoration: underline;
+  text-align: left;
+  margin-top: 18px;
+  margin-bottom: 6px;
+}
+p, li {
+  text-align: justify;
+  margin-bottom: 6px;
+}
+.cover-title {
+  font-size: 20pt;
+  font-weight: bold;
+  text-align: center;
+}
+.students-table {
+  border-collapse: collapse;
+  width: 70%;
+  margin: 0 auto;
+}
+.students-table td {
+  border: 1.5px solid #000;
+  padding: 6px 14px;
+  font-weight: bold;
+  font-size: 13pt;
+}
+.page-number {
+  text-align: center;
+  font-size: 11pt;
+  margin-top: 20px;
+}
+.footer {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10pt;
+  margin-top: 30px;
+  border-top: 0.5px solid #000;
+  padding-top: 6px;
+}
+
+Step 6:
+Wire everything in App.jsx
+- State: coverData object + contentData object
+- Pass setters to CoverFields and ContentFields
+- Download button calls PDFExporter with both data objects + collegeHeader
+
+Step 7:
+Style app.css
+- Background: #f5f5f5
+- Two-column layout: left 380px fixed, right fills remaining
+- Each panel scrollable independently
+- Textarea cards: white bg, 1px border #ddd, border-radius 6px, padding 12px
+- Labels: 13px, #555, font-weight 500
+- Download button: background #1a3a6b, color white, padding 14px, full width, font-size 15px
+- Add student button: outlined, small, navy border
+- Error message: red, 13px, shown below download button
+
+---
+
+## STRICT RULES
+
+1. Never hardcode college name, department, or logo anywhere except collegeHeader.js
+2. Future Scope: skip section heading AND body if textarea is empty
+3. References: split textarea by newline → render as <ol><li> per line
+4. PDF title on page 2 is a heading only (no body text under it, just the section label)
+5. Students table: render only rows where name is not empty
+6. Validate before PDF generation: block if Title is empty OR zero students entered
+7. Logo images: load from /public/ folder using relative path; if null in config, render styled HTML placeholder div instead
+8. Page numbers: page 1 shows "1" centered at bottom of cover; pages 2+ show number in footer center
+9. The header HTML block must be identical on every page — built from one shared function renderHeader(config)
+10. Do not use any CSS framework — plain CSS only
+
+
+
+# i have added the images of first page and the rest require pages for that use @ima
+
+#do all step by step 
